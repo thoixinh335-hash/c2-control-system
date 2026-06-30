@@ -24,8 +24,8 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] Agen
 log = logging.getLogger("agent")
 
 # ========== CONFIG ==========
-SERVER_URL = "127.0.0.1:8000"    # localhost cho agent chay cung may
-USE_SSL = False                  # False cho LAN, True cho cloudflare
+SERVER_URL = "c2.fastvault.net"    # localhost cho agent chay cung may
+USE_SSL = True                  # False cho LAN, True cho cloudflare
 # ============================
 
 def get_device_id():

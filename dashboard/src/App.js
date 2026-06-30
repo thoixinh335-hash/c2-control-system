@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import './App.css';
 
-const API = 'http://localhost:8000';
+const API = 'https://c2.fastvault.net';
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem('c2_token') || '');

