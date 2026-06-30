@@ -102,4 +102,22 @@ code { font-size: 11px; background: #161b22; padding: 2px 6px; border-radius: 3p
 .log-msg { color: #c9d1d9; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .log-critical .log-msg { color: #ff6b6b; font-weight: 600; }
 .log-error .log-msg { color: #f85149; }
+
+/* ── Keylogger Tab ── */
+.keylog-toolbar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.keylog-toolbar select { padding: 8px 12px; border: 1px solid #30363d; border-radius: 6px; background: #0d1117; color: #c9d1d9; font-size: 13px; min-width: 200px; }
+.keylog-toolbar select:focus { outline: none; border-color: #58a6ff; }
+.keylog-toolbar button { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; }
+.keylog-toolbar button:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-keylog-start { background: #da3633; color: #fff; }
+.btn-keylog-start:hover:not(:disabled) { background: #f85149; }
+.btn-keylog-get { background: #1f6feb; color: #fff; }
+.btn-keylog-get:hover:not(:disabled) { background: #388bfd; }
+.btn-keylog-stop { background: #21262d; color: #8b949e; border: 1px solid #30363d !important; }
+.btn-keylog-stop:hover:not(:disabled) { background: #30363d; color: #c9d1d9; }
+.keylog-status { margin-bottom: 12px; font-size: 13px; color: #8b949e; padding: 8px 12px; background: #161b22; border-radius: 6px; }
+.keylog-output { position: relative; }
+.keylog-output pre { background: #0d1117; border: 1px solid #30363d; border-radius: 8px; padding: 16px; font-family: 'Consolas', monospace; font-size: 13px; line-height: 1.6; white-space: pre-wrap; word-break: break-all; max-height: 50vh; overflow: auto; color: #c9d1d9; margin-bottom: 8px; }
+.btn-clear { padding: 6px 14px; background: #21262d; color: #8b949e; border: 1px solid #30363d; border-radius: 6px; cursor: pointer; font-size: 12px; }
+.btn-clear:hover { background: #30363d; color: #f85149; }
 .output-modal-body { overflow: auto; flex: 1; }
