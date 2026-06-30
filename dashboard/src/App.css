@@ -1,0 +1,85 @@
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0d1117; color: #c9d1d9; }
+
+/* ── Login ── */
+.login-page { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #0d1117; }
+.login-box { background: #161b22; padding: 40px; border-radius: 12px; border: 1px solid #30363d; width: 380px; text-align: center; }
+.login-box h1 { font-size: 24px; margin-bottom: 24px; color: #58a6ff; }
+.login-box input { width: 100%; padding: 10px 14px; margin-bottom: 12px; border: 1px solid #30363d; border-radius: 6px; background: #0d1117; color: #c9d1d9; font-size: 14px; }
+.login-box input:focus { outline: none; border-color: #58a6ff; }
+.login-box button { width: 100%; padding: 10px; background: #238636; color: #fff; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.login-box button:hover { background: #2ea043; }
+.err { color: #f85149; margin-top: 12px; font-size: 13px; }
+
+/* ── App Layout ── */
+.app { min-height: 100vh; }
+header { display: flex; align-items: center; gap: 24px; padding: 12px 24px; background: #161b22; border-bottom: 1px solid #30363d; }
+header h1 { font-size: 18px; color: #58a6ff; white-space: nowrap; }
+nav { display: flex; gap: 4px; }
+nav button { padding: 6px 16px; border: 1px solid #30363d; background: #21262d; color: #8b949e; border-radius: 6px; cursor: pointer; font-size: 13px; }
+nav button.active { background: #1f6feb; color: #fff; border-color: #1f6feb; }
+nav button:hover:not(.active) { background: #30363d; color: #c9d1d9; }
+.user-info { margin-left: auto; display: flex; align-items: center; gap: 12px; font-size: 13px; }
+.btn-logout { padding: 4px 12px; background: #21262d; color: #f85149; border: 1px solid #30363d; border-radius: 6px; cursor: pointer; font-size: 12px; }
+.btn-logout:hover { background: #da3633; color: #fff; }
+
+/* ── Stats ── */
+.stats-bar { display: flex; gap: 16px; padding: 16px 24px; }
+.stat { flex: 1; padding: 16px; border-radius: 8px; text-align: center; font-size: 13px; font-weight: 600; border: 1px solid #30363d; background: #161b22; }
+.stat span { display: block; font-size: 28px; margin-bottom: 4px; }
+.stat.online { border-left: 3px solid #3fb950; } .stat.online span { color: #3fb950; }
+.stat.total { border-left: 3px solid #58a6ff; } .stat.total span { color: #58a6ff; }
+.stat.pending { border-left: 3px solid #d29922; } .stat.pending span { color: #d29922; }
+.stat.alerts { border-left: 3px solid #f85149; } .stat.alerts span { color: #f85149; }
+
+/* ── Panel ── */
+.panel { padding: 24px; }
+.panel h2 { font-size: 16px; margin-bottom: 16px; color: #e6edf3; }
+
+/* ── CMD Send ── */
+.cmd-send { display: flex; gap: 8px; margin-bottom: 8px; }
+.cmd-send select { padding: 8px 12px; border: 1px solid #30363d; border-radius: 6px; background: #0d1117; color: #c9d1d9; font-size: 13px; min-width: 200px; }
+.cmd-send select:focus { outline: none; border-color: #58a6ff; }
+.cmd-send input { flex: 1; padding: 8px 12px; border: 1px solid #30363d; border-radius: 6px; background: #0d1117; color: #c9d1d9; font-size: 13px; font-family: 'Consolas', monospace; }
+.cmd-send input:focus { outline: none; border-color: #58a6ff; }
+.cmd-send button { padding: 8px 20px; background: #238636; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; }
+.cmd-send button:hover { background: #2ea043; }
+.cmd-send button:disabled { background: #21262d; color: #484f58; cursor: not-allowed; }
+.cmd-result { margin: 8px 0 16px; font-size: 13px; font-family: 'Consolas', monospace; }
+
+/* ── Table ── */
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #21262d; }
+th { background: #161b22; color: #8b949e; font-weight: 600; position: sticky; top: 0; }
+tbody tr:hover { background: #161b22; }
+.row-offline { opacity: 0.5; }
+.empty { text-align: center; color: #484f58; padding: 32px !important; }
+
+/* ── Badge ── */
+.badge { padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+.badge.online { background: #033a16; color: #3fb950; }
+.badge.offline { background: #3a0312; color: #f85149; }
+.badge.completed { background: #033a16; color: #3fb950; }
+.badge.pending, .badge.sent, .badge.running { background: #3a2e03; color: #d29922; }
+.badge.failed, .badge.timeout { background: #3a0312; color: #f85149; }
+
+/* ── Cells ── */
+code { font-size: 11px; background: #161b22; padding: 2px 6px; border-radius: 3px; font-family: 'Consolas', monospace; }
+.cmd-cell { font-family: 'Consolas', monospace; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.output-cell { font-family: 'Consolas', monospace; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+.output-cell:hover { color: #58a6ff; text-decoration: underline; }
+
+/* ── Output Modal ── */
+.output-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 1000; display: flex; align-items: center; justify-content: center; }
+.output-modal { background: #161b22; border: 1px solid #30363d; border-radius: 12px; width: 80%; max-width: 900px; max-height: 80vh; display: flex; flex-direction: column; }
+.output-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid #30363d; font-weight: 600; }
+.output-modal-header button { background: none; border: none; color: #8b949e; font-size: 18px; cursor: pointer; }
+.output-modal-header button:hover { color: #f85149; }
+.output-modal pre { padding: 16px; overflow: auto; flex: 1; font-family: 'Consolas', monospace; font-size: 13px; line-height: 1.5; white-space: pre-wrap; word-break: break-all; color: #c9d1d9; margin: 0; }
+
+/* ── Webcam ── */
+.webcam-thumb { color: #58a6ff; font-weight: 600; }
+.webcam-container { text-align: center; padding: 16px; background: #0d1117; }
+.webcam-img { max-width: 100%; max-height: 50vh; border-radius: 8px; border: 2px solid #30363d; }
+.output-modal-body { overflow: auto; flex: 1; }

@@ -1,0 +1,39 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.spec
+build/
+dist/
+*.egg-info/
+
+# Node
+/node_modules/
+*.log
+
+# OS
+Desktop.ini
+Thumbs.db
+
+# C2 specific
+/controller/uploads/
+/controller/logs/
+/payload/agent_core/__pycache__/
+/agent/
+/server/
+/controller/api/__pycache__/
+
+# Build artifacts (keep source only)
+*.exe
+*.zip
+nuitka-crash-report.xml
+package.sed
+python-embed.zip
+
+# IDE
+.vscode/
+.idea/
+
+# Env
+.env
