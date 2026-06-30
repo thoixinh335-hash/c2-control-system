@@ -16,6 +16,8 @@ function App() {
   const [loginErr, setLoginErr] = useState('');
   const [user, setUser] = useState(null);
   const [fullOutput, setFullOutput] = useState(null);
+  const [logs, setLogs] = useState([]);
+  const [logLevel, setLogLevel] = useState('');
 
   const api = useCallback(() => axios.create({
     baseURL: API,
@@ -38,12 +40,22 @@ function App() {
     } catch (e) {}
   }, [api, selectedDevice]);
 
+  const fetchLogs = useCallback(async () => {
+    try {
+      const params = {};
+      if (selectedDevice) params.device_id = selectedDevice;
+      if (logLevel) params.level = logLevel;
+      const r = await api().get('/api/logs', { params });
+      setLogs(r.data);
+    } catch (e) {}
+  }, [api, selectedDevice, logLevel]);
+
   useEffect(() => {
     if (!token) return;
-    fetchStats(); fetchDevices(); fetchCommands();
-    const iv = setInterval(() => { fetchStats(); fetchDevices(); fetchCommands(); }, 5000);
+    fetchStats(); fetchDevices(); fetchCommands(); fetchLogs();
+    const iv = setInterval(() => { fetchStats(); fetchDevices(); fetchCommands(); fetchLogs(); }, 5000);
     return () => clearInterval(iv);
-  }, [token, fetchStats, fetchDevices, fetchCommands]);
+  }, [token, fetchStats, fetchDevices, fetchCommands, fetchLogs]);
 
   const login = async (e) => {
     e.preventDefault();
@@ -113,6 +125,7 @@ function App() {
         <nav>
           <button className={tab === 'devices' ? 'active' : ''} onClick={() => setTab('devices')}>📡 Thiet bi</button>
           <button className={tab === 'commands' ? 'active' : ''} onClick={() => setTab('commands')}>💻 Lenh</button>
+          <button className={tab === 'logs' ? 'active' : ''} onClick={() => setTab('logs')}>📋 Logs</button>
           <button className={tab === 'alerts' ? 'active' : ''} onClick={() => setTab('alerts')}>🔔 Canh bao</button>
         </nav>
         <div className="user-info">
@@ -214,6 +227,43 @@ function App() {
               {commands.length === 0 && <tr><td colSpan="7" className="empty">No commands yet</td></tr>}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {tab === 'logs' && (
+        <div className="panel">
+          <h2>📋 Nhat ky thiet bi</h2>
+          <div className="log-filter">
+            <select value={selectedDevice} onChange={e => setSelectedDevice(e.target.value)}>
+              <option value="">-- Tat ca thiet bi --</option>
+              {devices.map(d => (
+                <option key={d.device_id} value={d.device_id}>{d.hostname} ({d.device_id.slice(-8)})</option>
+              ))}
+            </select>
+            <select value={logLevel} onChange={e => setLogLevel(e.target.value)}>
+              <option value="">Tat ca level</option>
+              <option value="DEBUG">DEBUG</option>
+              <option value="INFO">INFO</option>
+              <option value="WARN">WARN</option>
+              <option value="ERROR">ERROR</option>
+              <option value="CRITICAL">CRITICAL</option>
+            </select>
+          </div>
+          <div className="log-list">
+            {logs.length === 0 ? (
+              <p className="empty">Khong co log nao</p>
+            ) : (
+              logs.map(log => (
+                <div key={log.log_id} className={`log-entry log-${(log.level || 'info').toLowerCase()}`}>
+                  <span className="log-time">{new Date(log.created_at).toLocaleTimeString()}</span>
+                  <span className={`log-badge ${(log.level || 'info').toLowerCase()}`}>{log.level}</span>
+                  <span className="log-device"><code>{log.device_id?.slice(-12)}</code></span>
+                  <span className="log-source">[{log.source}]</span>
+                  <span className="log-msg">{log.message}</span>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       )}
 
